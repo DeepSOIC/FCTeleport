@@ -67,7 +67,7 @@ class FCProject(FrozenClass):
     
     def findObjects(self, type_id):
         'findObjects(type_id): returns list of App objects by C++ type'
-        return [self.getObject(obj_name) for obj_name in self.listObjetsOfType(type_id)]
+        return [self.getObject(obj_name) for obj_name in self.listObjectsOfType(type_id)]
     
     def getObject(self, object_name):
         object_node = self.node_objects.find('Object[@name="{name}"]'.format(name= object_name))
@@ -95,24 +95,25 @@ class DocumentObject(FrozenClass):
     def __getattr__(self, attr_name):
         if attr_name == 'PropertiesList':
             return self._PropertiesList()
-        return getPropertyNode(attr_name)
+        return self.getPropertyNode(attr_name)
         
     def getPropertyNode(self, prop_name):
         prop = self.datanode.find('Properties/Property[@name="{propname}"]'.format(propname= prop_name))
         if prop is None:
             raise AttributeError("Object {obj} has no property named '{prop}'".format(obj= self.Name, prop= attr_name))
+        return prop
     
     def typeId(self):
         return self.objectnode.get("type")
     
     def setTypeId(self, new_type_id):
-        self.objectnode.set(type, new_type_id)
+        self.objectnode.set('type', new_type_id)
     
     def getPropertiesNodes(self):
         return self.datanode.findall('Properties/Property')
 
     def _PropertiesList(self):
-        propsnodes = self.getObjectPropertiesNodes()
+        propsnodes = self.getPropertiesNodes()
         return [prop.get('name') for prop in propsnodes]
     
     def renameProperty(self, old_name, new_name):
