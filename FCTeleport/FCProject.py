@@ -4,12 +4,13 @@ import zipfile
 from xml.etree import ElementTree
 
 class FCProject(FrozenClass):
-    program_version_string = "" # version string, as extracted from main Document tag, usually like "0.17R10000 (Git)"
+    program_version_string = '' # version string, as extracted from main Document tag, usually like "0.17R10000 (Git)"
     program_version = (0,0,0) # version number extracted from version string, as tuple (major, minor, rev)
     document_xml = None #ElementTree object of parsed Document.xml 
     guidocument_xml = None #ElementTree object of parsed GuiDocument.xml
     zip = None #zip file object
-    filename = "" 
+    filename = ''
+    Name = ''
     
     node_objects = None
     node_objectdata = None
@@ -55,6 +56,8 @@ class FCProject(FrozenClass):
         major,minor,rev = match.groups()
         major = int(major); minor = int(minor); rev = int(rev)
         self.program_version = (major,minor,rev)
+        
+        self.Name = self.document_xml.find('Properties/Property[@name="Label"]/String').get('Value')
     
     def listObjects(self):
         "listObjects(): returns list of tuples ('ObjectName', 'Namespace::Type')"
