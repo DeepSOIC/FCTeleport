@@ -57,7 +57,7 @@ class FCProject(FrozenClass):
         major = int(major); minor = int(minor); rev = int(rev)
         self.program_version = (major,minor,rev)
         
-        self.Name = self.document_xml.find('Properties/Property[@name="Label"]/String').get('Value')
+        self.Name = self.document_xml.find('Properties/Property[@name="Label"]/String').get('value')
     
     def listObjects(self):
         "listObjects(): returns list of tuples ('ObjectName', 'Namespace::Type')"
