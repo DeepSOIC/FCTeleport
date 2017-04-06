@@ -3,7 +3,7 @@ from .. import Teleport
 
 class ThisTeleport(Teleport.Teleport):
     for_revision = 9518 # artificial number, to be applied before porting PartDesign Bodies!
-    brief_description = "Body ported to use extensions"
+    brief_description = "DeepSOIC's C++ Module containers to Bodies"
     def upgradeProject(self, project):
         bb = project.findObjects("Part::BodyBase")
         for b in bb:
