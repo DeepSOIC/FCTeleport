@@ -8,6 +8,7 @@ def printerr(*args, **kwargs):
 class Job(list):
     direction = 0 #-1 for downgrade, +1 for upgrade
     _FreeCAD = None #FreeCAD module (to be used for printing log messages)
+    change_counter = 0
     
     def __init__(self, FreeCAD = None):
         self._FreeCAD = FreeCAD
@@ -23,6 +24,7 @@ class Job(list):
             self.log('Job empty, nothing to do')
             return
         self.log("{n} opeations to do".format(n= len(self)))
+        self.change_counter = 0
         for teleport_class in self[::self.direction]:
             #create instance
             teleport = teleport_class()
@@ -37,11 +39,16 @@ class Job(list):
                     teleport.upgradeProject(project)
                 else:
                     teleport.downgradeProject(project)
-                self.log('...done')
+                if teleport.change_counter > 0:
+                    self.log('... {num} changes done'.format(num= teleport.change_counter))
+                    self.change_counter += teleport.change_counter
+                else:
+                    self.log('... no changes'.format(num= teleport.change_counter))
             except Exception as err:
                 self.log('...failed with an error:')
                 self.err(str(err))
-                
+        return self.change_counter
+        
     def log(self, string):
         print(string)
     def err(self, string):
@@ -53,11 +60,12 @@ def makeVersionPortJob(source_revision, target_revision):
     import Teleporters
     
     job = Job()
+    job.direction = +1 if target_revision > source_revision else -1
     for t in Teleport.registry.version_teleports:
         if t.for_revision > min(source_revision, target_revision) and t.for_revision <= max(source_revision, target_revision):
-            job.append(t)
+            if (job.direction == +1 and hasattr(t, 'upgradeProject')) or (job.direction == -1 and hasattr(t, 'downgradeProject')):
+                job.append(t)
     job.sortTeleportsByVersion()
-    job.direction = +1 if target_revision > source_revision else -1
     
     return job
 

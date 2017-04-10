@@ -10,13 +10,12 @@ class ThisTeleport(Teleport.Teleport):
             b.setTypeId('PartDesign::Body')
             try:
                 b.renameProperty('Model', 'Group')
+                self.change_counter += 1
             except Exception as err:
                 self.err("property 'Model' expected but not found")
         # extension can be omitted, FreeCAD seems to deal with it just fine
-        
 
-    def downgradeProject(self, project):
-        pass
+    #def downgradeProject(self, project):
         #(backwards conversion is impossible)
 
 Teleport.registry.registerTeleport(ThisTeleport)
