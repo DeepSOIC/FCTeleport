@@ -12,6 +12,12 @@ class FCProject(FrozenClass):
     filename = ''
     Name = ''
     
+    _property_attributes = [
+        'program_version',
+        'program_version_string',
+        'Objects'
+    ]
+    
     node_objects = None
     node_objectdata = None
     
@@ -19,9 +25,17 @@ class FCProject(FrozenClass):
         self._freeze()
     
     def __getattr__(self, attr_name):
-        if attr_name == 'Objects':
-            return 
+        if attr_name in self._property_attributes:
+            return getattr(self, '_'+attr_name)()
         FrozenClass.__getattribute__(self, attr_name)
+    
+    def __setattr__(self, attr_name, value):
+        if attr_name in self._property_attributes:
+            if hasattr(self, '_set_'+attr_name):
+                getattr(self, '_set_'+attr_name)(value)
+            else:
+                raise AttributeError('Property {attr} of FCProject object is read-only'.format(attr= attr_name))
+        FrozenClass.__setattr__(self, attr_name, value)
     
     def readFile(self,filename):
         self.filename = filename
@@ -58,6 +72,32 @@ class FCProject(FrozenClass):
         self.program_version = (major,minor,rev)
         
         self.Name = self.document_xml.find('Properties/Property[@name="Label"]/String').get('value')
+    
+    def _program_version(self):
+        program_version_string = self.program_version_string
+        
+        # parse version string, which typically looks like this: "0.17R8361 (Git)"
+        import re
+        match = re.match(r"(\d+)\.(\d+)\R(\d+).+",program_version_string)
+        major,minor,rev = match.groups()
+        major = int(major); minor = int(minor); rev = int(rev)
+        return (major,minor,rev)
+    
+    def _program_version_string(self):
+        return self.document_xml.getroot().get('ProgramVersion')
+        
+    def _set_program_version(self, version_tuple, imprint_old = False):
+        major,minor,rev = version_tuple
+        self._set_program_version_string('{major}.{minor}R{rev} (Git)'.format(**vars()), imprint_old)
+
+    def setVersion(self, version_tuple, imprint_old = False):
+        self._set_program_version(version_tuple, imprint_old)
+        
+    def _set_program_version_string(self, version_string, imprint_old = False):
+        if imprint_old:
+            if self.document_xml.getroot().get('ConvertedFromVersion') is None: #make sure to not overwrite...
+                self.document_xml.getroot().set('ConvertedFromVersion', self.program_version_string)
+        self.document_xml.getroot().set('ProgramVersion', version_string)
     
     def listObjects(self):
         "listObjects(): returns list of tuples ('ObjectName', 'Namespace::Type')"
