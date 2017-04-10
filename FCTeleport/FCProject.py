@@ -61,16 +61,7 @@ class FCProject(FrozenClass):
         assert(self.node_objects is not None)
         self.node_objectdata = self.document_xml.find('ObjectData')
         assert(self.node_objectdata is not None)
-        
-        self.program_version_string = self.document_xml.getroot().get('ProgramVersion')
-        
-        # parse version string, which typically looks like this: "0.17R8361 (Git)"
-        import re
-        match = re.match(r"(\d+)\.(\d+)\R(\d+).+",self.program_version_string)
-        major,minor,rev = match.groups()
-        major = int(major); minor = int(minor); rev = int(rev)
-        self.program_version = (major,minor,rev)
-        
+                
         self.Name = self.document_xml.find('Properties/Property[@name="Label"]/String').get('value')
     
     def _program_version(self):
@@ -163,5 +154,8 @@ class DocumentObject(FrozenClass):
         node = self.getPropertyNode(old_name)
         node.set('name', new_name)
 
-def dump(node):
-    ElementTree.dump(node)
+def load(project_filename):
+    "load(project_filename): reads an FCStd file and returns FCProject object"
+    project = FCProject()
+    project.readFile(project_filename)
+    return project
