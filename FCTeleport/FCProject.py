@@ -24,10 +24,10 @@ class FCProject(FrozenClass):
     def __init__(self):
         self._freeze()
     
-    def __getattr__(self, attr_name):
-        if attr_name in self._property_attributes:
-            return getattr(self, '_'+attr_name)()
-        FrozenClass.__getattribute__(self, attr_name)
+    def __getattribute__(self, attr_name):
+        if attr_name in FrozenClass.__getattribute__(self,'_property_attributes'):
+            return FrozenClass.__getattribute__(self,'_'+attr_name)()
+        return FrozenClass.__getattribute__(self, attr_name)
     
     def __setattr__(self, attr_name, value):
         if attr_name in self._property_attributes:

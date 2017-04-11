@@ -36,3 +36,25 @@ def convertProject(project_filename, target_version = None):
     filename_out = file+"_ported"+str(target_revision)+ext
     project.writeFile(filename_out)
 
+def isConversionRequired(document):
+    try:
+        from . import Job
+        from . import FCProject
+
+        project_filename = document.FileName
+        target_version = FreeCADVersion()
+        target_revision = target_version[2]
+
+        project = FCProject.load(project_filename)
+        source_revision = project.program_version[2]
+        job = Job.makeVersionPortJob(source_revision, target_revision)
+        if job.analyze(project):
+            lll = len(job)
+            print ("to convert from {source_revision} to {target_revision}: {lll} teleprters".format(**vars()))
+            return job.direction
+        else:
+            return False
+    except Exception as err:
+        import FreeCAD as App
+        App.Console.PrintError("FCTeleport: isConversionRequired: {err}\n".format(err= err))
+        return False

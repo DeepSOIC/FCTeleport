@@ -49,6 +49,10 @@ class Job(list):
                 self.err(str(err))
         return self.change_counter
         
+    def analyze(self, document):
+        #returns True if any of teleporters reports that it wants to fix something this FreeCAD document
+        return len(self) > 0 #trivial implementation, temporary - for testing
+        
     def log(self, string):
         print(string)
     def err(self, string):
