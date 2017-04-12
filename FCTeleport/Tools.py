@@ -11,7 +11,7 @@ def FreeCADVersion():
     return (major, minor, rev)
     
 
-def convertProject(project_filename, target_version = None):
+def convertProject(project_filename, target_version = None, filename_out = None):
     """convertProject(project_filename, target_version = None): upgrades or downgrades a 
     project to specified version of FreeCAD.
     
@@ -31,10 +31,13 @@ def convertProject(project_filename, target_version = None):
     job.applyTo(project)
     project.setVersion(target_version, imprint_old= True)
     
-    import os.path as path
-    file,ext = path.splitext(project_filename)
-    filename_out = file+"_ported"+str(target_revision)+ext
+    if filename_out is None:
+        import os.path as path
+        file,ext = path.splitext(project_filename)
+        filename_out = file+"_ported"+str(target_revision)+ext
     project.writeFile(filename_out)
+    
+    return filename_out
 
 def isConversionRequired(document):
     try:

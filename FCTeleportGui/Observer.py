@@ -4,9 +4,12 @@ from . import Utils
 from FCTeleport.Base.FrozenClass import FrozenClass
 
 class Observer(FrozenClass):
-    document_status = None # dict. Key = document name, value = 'New' or 'Restoring' or 'Work'
+    document_status = None # dict. Key = document name, value = 'New' or 'Restoring' or 'Work' or 'Temp'
+    ignoreonce = False # list of filenames to ignore
+    
     def reset(self):
         self.document_status = {}
+        self.ignoreonce = False
     
     def __init__(self):
         self.reset()
@@ -14,7 +17,8 @@ class Observer(FrozenClass):
         
     def slotCreatedDocument(self,doc): 
         docname = doc.Name
-        self.document_status[docname] = 'New'
+        if self.document_status.get(docname, None) != 'Temp':
+            self.document_status[docname] = 'New'
     
     def slotDeletedDocument(self,doc):
         docname = doc.Name
@@ -23,6 +27,10 @@ class Observer(FrozenClass):
     def slotCreatedObject(self, feature):
         doc = feature.Document
         docname = doc.Name
+        if self.ignoreonce:
+            self.ignoreonce = False
+            self.document_status[docname] = 'Work'
+            return
         if len(feature.Document.Objects) == 1 and len(doc.FileName)>0 and self.document_status[docname] == 'New':
             # An object was added to a new project, yet the project already has a filename assigned. Most likely, it is restoring.
             self.document_status[docname] = 'Restoring'
@@ -45,7 +53,7 @@ class Observer(FrozenClass):
                 if not touched_found:
                     # we are using the global purge of touched to detect that a project has finished loading.
                     self.document_status[docname] = 'Work'
-                    self.myslotRestoredDocument(doc)
+                    Utils.DelayedExecute(lambda doc=doc: self.myslotRestoredDocument(doc))
         if not busy:
             #no projects are still restoring... why is timer still on???
             global timer
@@ -75,12 +83,20 @@ class Observer(FrozenClass):
                 if mb.clickedButton() is btnCancel:
                     return
                 if mb.clickedButton() is btnConvertWrite:
-                    TeleTools.convertProject(doc.FileName)
-                    Utils.msgbox("File converted!")
-                if mb.clickedButton() is btnConvertWrite:
-                    Utils.msgbox("Not implemented =(")
-
-            
+                    file = TeleTools.convertProject(doc.FileName)
+                    Utils.msgbox("FCTeleport", "Created converted copy of the project here:\n{file}".format(file= file))
+                if mb.clickedButton() is btnConvertOpen:
+                    import tempfile
+                    f = tempfile.NamedTemporaryFile(suffix= ".FCStd", delete= False)
+                    try:
+                        f.file.close()
+                        TeleTools.convertProject(doc.FileName, filename_out= f.name)
+                        self.ignoreonce = True #ugly hack. prevent teleport from scanning this file for porting, as it won't exist at that point
+                        App.openDocument(f.name)
+                    finally:
+                        import os
+                        os.remove(f.name)
+                    
 
 if not "observerInstance" in globals():
     observerInstance = None
