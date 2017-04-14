@@ -3,7 +3,8 @@ from .. import Teleport
 
 class ThisTeleport(Teleport.Teleport):
     for_revision = 9518 # artificial number, to be applied before porting PartDesign Bodies!
-    brief_description = "DeepSOIC's C++ Module containers to Bodies"
+    commit = None
+    brief_description = "DeepSOIC's C++ Module containers removed"
     def upgradeProject(self, project):
         bb = project.findObjects("Part::BodyBase")
         for b in bb:
@@ -17,5 +18,12 @@ class ThisTeleport(Teleport.Teleport):
 
     #def downgradeProject(self, project):
         #(backwards conversion is impossible)
+
+    def analyze(self, document, direction):
+        if direction == +1:
+            bodies = document.findObjects('Part::BodyBase')
+            return [body.Name for body in bodies]
+        else:
+            return []
 
 Teleport.registry.registerTeleport(ThisTeleport)

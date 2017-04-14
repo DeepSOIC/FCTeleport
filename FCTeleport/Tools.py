@@ -40,6 +40,13 @@ def convertProject(project_filename, target_version = None, filename_out = None)
     return filename_out
 
 def isConversionRequired(document):
+    '''isConversionRequired(document): tests if a conversion will yeild any change for this project 
+    
+    document: FreeCAD.Document, not FCProject! Its FileName must point to a real file.
+    
+    Returns tuple(conclusion, job). Conclusion is either False if nothing to do, +1 if upgrade 
+    can be done, or -1 if downgrade can be done. Job is a Job object, which contains a list 
+    of teleporters to apply, as well as list of features to be affected.'''
     try:
         from . import Job
         from . import FCProject
@@ -54,10 +61,10 @@ def isConversionRequired(document):
         if job.analyze(project):
             lll = len(job)
             print ("to convert from {source_revision} to {target_revision}: {lll} teleprters".format(**vars()))
-            return job.direction
+            return (job.direction, job)
         else:
-            return False
+            return (False, job)
     except Exception as err:
         import FreeCAD as App
         App.Console.PrintError("FCTeleport: isConversionRequired: {err}\n".format(err= err))
-        return False
+        return (False, None)

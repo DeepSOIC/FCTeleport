@@ -65,13 +65,23 @@ class Observer(FrozenClass):
         docname = doc.Name
         if len(doc.FileName) > 0:
             from FCTeleport import Tools as TeleTools
-            dir = TeleTools.isConversionRequired(doc)
+            dir, job = TeleTools.isConversionRequired(doc)
             if dir != False:
                 from PySide import QtGui
                 mb = QtGui.QMessageBox()
                 upgraded = "upgraded" if dir>0 else "downgraded"
                 older = "older" if dir>0 else "newer"
-                mb.setText("Project {docname} was created in {older} version of FreeCAD, and contains features that can be {upgraded} to current version.".format(**vars()))
+                jobactions = [t.brief_description for t in job.an_list_of_actions]
+                jobactions = '\n  '.join(jobactions)
+                features = job.an_list_of_features
+                if len(features)>8:
+                    features = features[0:5] + ['...'] + features[-2:]
+                features = '\n  '.join(features)
+                mb.setText("Project {docname} was created in {older} version of FreeCAD, and contains features that can be {upgraded} to current version.\n\n"
+                           "Breaking changes involved:\n"
+                           "  {jobactions}\n\n"
+                           "Features to be altered:\n"
+                           "  {features}\n\n".format(**vars()))
                 mb.setWindowTitle("FCTeleport")
                 btnCancel = mb.addButton(QtGui.QMessageBox.StandardButton.Cancel)
                 btnConvertOpen = mb.addButton("Open converted", QtGui.QMessageBox.ButtonRole.ActionRole)

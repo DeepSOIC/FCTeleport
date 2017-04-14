@@ -11,6 +11,7 @@ def printerr(*args, **kwargs):
 class Teleport(FrozenClass):
     "Teleport: base class for commit-specific converters"
     for_revision = -1 #indicates revision number of a breaking-change commit, that this object is to convert. -1 is a signal that the teleport isn't for a commit, but rather is a generic utility.
+    commit = None # commit hash
     brief_description = '' #brief description of the breaking change
     job = None #set by Job.
     change_counter = 0 # number of changes applied to project by action of the teleport. This doesn't have to be an exact number, it is usually tested to find out if teleport did something at all.
@@ -28,8 +29,8 @@ class Teleport(FrozenClass):
     #    "Converts project made in newer version to be readable by older version"
     #    raise NotImplementedError()
     
-    def analyze(self, document):
-        "tests if the project opened in FreeCAD should be upgraded/downgraded"
+    def analyze(self, document, direction):
+        "tests if the project opened in FreeCAD contains something to be upgraded/downgraded. Returns list of strings of what is to change."
         raise NotImplementedError()
     
     def log(self, string):
